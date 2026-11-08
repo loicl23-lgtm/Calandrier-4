@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendrier de l'Avent littéraire</title>
+<meta name="description" content="Chaque jour, une case à ouvrir : une citation, une figure de style ou un auteur à découvrir.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0b1530; --night2:#142450; --gold:#f3c969; --gold2:#d9a53a;
+    --red:#b3202e; --red2:#8a1420; --green:#1f5a45; --cream:#fdf6e3; --ink:#2a1f14;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:'Lora',Georgia,serif; color:var(--cream);
+    background:radial-gradient(ellipse at top,var(--night2),var(--night) 70%) fixed;
+    overflow-x:hidden;
+  }
+  #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
+  header,main,footer{position:relative;z-index:1}
+  header{text-align:center;padding:2.2rem 1rem 1rem}
+  .star{font-size:2rem;color:var(--gold);filter:drop-shadow(0 0 10px var(--gold))}
+  h1{
+    font-family:'Playfair Display',serif;font-weight:800;margin:.2rem 0;
+    font-size:clamp(1.8rem,5vw,3.2rem);color:var(--gold);letter-spacing:.02em;
+    text-shadow:0 0 18px rgba(243,201,105,.35);
+  }
+  .sub{margin:0 auto;max-width:36rem;opacity:.85;font-style:italic}
+  .bar{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center;align-items:center;margin:1.2rem 0 0}
+  .pill{background:rgba(255,255,255,.08);border:1px solid rgba(243,201,105,.35);border-radius:999px;padding:.4rem 1rem;font-size:.9rem}
+  button.ctl{
+    font:inherit;font-size:.9rem;color:var(--cream);cursor:pointer;
+    background:transparent;border:1px solid rgba(243,201,105,.5);border-radius:999px;padding:.4rem 1rem;
+    transition:.2s;
+  }
+  button.ctl:hover,button.ctl:focus-visible{background:rgba(243,201,105,.18)}
+  button.ctl[aria-pressed="true"]{background:var(--gold);color:var(--night);border-color:var(--gold)}
+  main{max-width:960px;margin:0 auto;padding:1rem 1rem 3rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1rem}
+  .door{
+    position:relative;aspect-ratio:1/1;border:0;padding:0;background:none;cursor:pointer;
+    perspective:700px;font:inherit;
+  }
+  .door .face{
+    position:absolute;inset:0;border-radius:14px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:.2rem;
+    backface-visibility:hidden;transition:transform .7s cubic-bezier(.2,.7,.2,1),box-shadow .2s;
+  }
+  .door .front{
+    background:
+      repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 6px,transparent 6px 12px),
+      linear-gradient(145deg,var(--red),var(--red2));
+    border:2px solid var(--gold);
+    box-shadow:0 6px 16px rgba(0,0,0,.45), inset 0 0 0 4px rgba(243,201,105,.18);
+    transform-origin:left center;
+  }
+  .door:nth-child(3n) .front{background:
+      repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 6px,transparent 6px 12px),
+      linear-gradient(145deg,#2a7a5d,var(--green));}
+  .door:nth-child(5n) .front{background:
+      repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 6px,transparent 6px 12px),
+      linear-gradient(145deg,#2b3f8a,#1b2a63);}
+  .door .num{font-family:'Playfair Display',serif;font-weight:800;font-size:2.4rem;color:var(--gold);text-shadow:0 2px 0 rgba(0,0,0,.35)}
+  .door .tiny{font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+  .door .back{
+    background:var(--cream);color:var(--ink);border:2px solid var(--gold);
+    transform:rotateY(180deg);font-size:2rem;
+  }
+  .door .back small{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em}
+  .door.open .front{transform:rotateY(-160deg)}
+  .door.open .back{transform:rotateY(0)}
+  .door:not(.locked):hover .front,.door:not(.locked):focus-visible .front{box-shadow:0 10px 24px rgba(243,201,105,.35),0 6px 16px rgba(0,0,0,.45)}
+  .door:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:14px}
+  .door.locked{cursor:not-allowed;filter:grayscale(.7) brightness(.7)}
+  .door.shake{animation:shake .4s}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+  /* modale */
+  dialog{
+    border:0;padding:0;background:transparent;max-width:min(92vw,560px);width:100%;
+    color:var(--ink);overflow:visible;
+  }
+  dialog::backdrop{background:rgba(5,10,25,.8);backdrop-filter:blur(3px)}
+  .card{
+    background:var(--cream);border-radius:18px;padding:2rem 1.6rem 1.6rem;position:relative;
+    border:3px solid var(--gold);
+    box-shadow:0 20px 60px rgba(0,0,0,.6), inset 0 0 0 6px rgba(179,32,46,.12);
+    animation:pop .45s cubic-bezier(.2,.9,.3,1.2);
+  }
+  @keyframes pop{from{transform:scale(.7) rotate(-3deg);opacity:0}to{transform:none;opacity:1}}
+  .badge{
+    display:inline-block;background:var(--red);color:var(--cream);border-radius:999px;
+    padding:.2rem .9rem;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem;
+  }
+  .badge.fig{background:var(--green)} .badge.aut{background:#2b3f8a}
+  .day{position:absolute;top:-1.1rem;right:1.2rem;background:var(--gold);color:var(--night);
+       font-family:'Playfair Display',serif;font-weight:800;border-radius:50%;width:2.6rem;height:2.6rem;
+       display:grid;place-items:center;font-size:1.2rem;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+  .card h2{font-family:'Playfair Display',serif;margin:.2rem 0 .6rem;font-size:1.5rem;color:var(--red2)}
+  .quote{font-family:'Playfair Display',serif;font-style:italic;font-size:1.35rem;line-height:1.45;margin:.4rem 0 .8rem}
+  .src{font-size:.95rem;opacity:.8}
+  .note{margin-top:1rem;padding:.8rem 1rem;background:rgba(31,90,69,.1);border-left:4px solid var(--green);border-radius:6px;font-size:.98rem;line-height:1.5}
+  .ask{margin-top:.9rem;font-weight:600;color:var(--red2)}
+  .close{
+    position:absolute;top:.6rem;left:.8rem;border:0;background:none;font-size:1.6rem;cursor:pointer;color:var(--ink);opacity:.6
+  }
+  .close:hover{opacity:1}
+  footer{text-align:center;padding:1.5rem 1rem 2.5rem;opacity:.65;font-size:.85rem}
+  @media (prefers-reduced-motion:reduce){
+    .door .face,.card{transition:none;animation:none}
+    #snow{display:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<header>
+  <div class="star" aria-hidden="true">★</div>
+  <h1>Calendrier de l'Avent littéraire</h1>
+  <p class="sub">24 cases à ouvrir : une citation, une figure de style ou un grand auteur à découvrir.</p>
+  <div class="bar">
+    <span class="pill" id="progress">0 / 24 cases ouvertes</span>
+    <button class="ctl" id="modeBtn" aria-pressed="false" title="Si activé, une case ne s'ouvre qu'à partir de sa date en décembre">Respecter les dates de décembre</button>
+    <button class="ctl" id="randBtn">Case au hasard</button>
+    <button class="ctl" id="resetBtn">Tout refermer</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>Joyeuses fêtes littéraires ✦ Œuvres du domaine public</footer>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="card" id="card"></div>
+</dialog>
+
+<script>
+/* ========= CONTENU : modifie librement les 24 cases ========= */
+const TYPES = {
+  cit:{label:"Citation célèbre", cls:""},
+  fig:{label:"Figure de style", cls:"fig"},
+  aut:{label:"Auteur à découvrir", cls:"aut"}
+};
+
+const DAYS = [
+ {t:"cit", title:"Un cri de courage", quote:"Ceux qui vivent, ce sont ceux qui luttent.", src:"Victor Hugo, Les Châtiments (1853)", note:"Remarque la répétition de « ceux » en début de groupe : c'est une anaphore.", ask:"Pour toi, que veut dire « vivre » ?"},
+ {t:"fig", title:"L'oxymore", quote:"Cette obscure clarté qui tombe des étoiles.", src:"Pierre Corneille, Le Cid (1637)", note:"Un oxymore associe deux mots de sens opposés : « obscure » et « clarté ». Effet : une lumière faible, mystérieuse, comme celle des étoiles la nuit.", ask:"À toi : invente un oxymore de Noël !"},
+ {t:"aut", title:"Molière (1622-1673)", quote:"De son vrai nom Jean-Baptiste Poquelin.", src:"Dramaturge et comédien du XVIIe siècle", note:"Il a écrit Le Tartuffe, L'Avare, Le Malade imaginaire, Le Bourgeois gentilhomme… Il est mort peu après avoir joué Le Malade imaginaire. On l'appelle encore « la langue de Molière » pour désigner le français.", ask:"Quelle pièce de Molière connais-tu déjà ?"},
+ {t:"cit", title:"La leçon de la patience", quote:"Patience et longueur de temps font plus que force ni que rage.", src:"Jean de La Fontaine, « Le Lion et le Rat » (Fables)", note:"Morale de la fable : un petit rat sauve un puissant lion en rongeant ses liens. On ne mesure pas sa valeur à sa taille.", ask:"Connais-tu une situation où la patience a gagné ?"},
+ {t:"fig", title:"L'hyperbole", quote:"C'est un roc ! C'est un pic ! C'est un cap ! Que dis-je, c'est un cap ? C'est une péninsule !", src:"Edmond Rostand, Cyrano de Bergerac (1897)", note:"L'hyperbole exagère pour frapper l'esprit. Ici, Cyrano décrit son propre nez avec une surenchère comique, de plus en plus grande.", ask:"Transforme « il fait froid » en hyperbole."},
+ {t:"cit", title:"Le jardin de Candide", quote:"Il faut cultiver notre jardin.", src:"Voltaire, Candide (1759)", note:"Conclusion du conte : plutôt que de débattre sans fin, mieux vaut agir concrètement, avec modestie, sur ce qui est à notre portée.", ask:"Quel est « ton jardin » à cultiver cette année ?"},
+ {t:"aut", title:"Victor Hugo (1802-1885)", quote:"« Le plus grand poète du XIXe siècle »… et bien plus.", src:"Poète, romancier, dramaturge, homme politique", note:"Auteur des Misérables, de Notre-Dame de Paris, des Contemplations. Exilé pendant près de vingt ans sous Napoléon III, il est revenu en France en héros. Il repose au Panthéon.", ask:"As-tu vu une adaptation de Notre-Dame de Paris ou des Misérables ?"},
+ {t:"fig", title:"La comparaison", quote:"Je suis comme le roi d'un pays pluvieux.", src:"Charles Baudelaire, « Spleen », Les Fleurs du mal (1857)", note:"Une comparaison rapproche deux éléments grâce à un outil de comparaison (« comme », « tel », « pareil à »…). Ici, la mélancolie du poète est comparée à un roi qui s'ennuie.", ask:"Complète : « Mon lundi matin est comme… »"},
+ {t:"cit", title:"Liberté et chaînes", quote:"L'homme est né libre, et partout il est dans les fers.", src:"Jean-Jacques Rousseau, Du contrat social (1762)", note:"Phrase d'ouverture d'un grand texte de philosophie politique. Elle oppose la liberté naturelle et les contraintes de la société.", ask:"Quelles « chaînes » existent encore aujourd'hui, selon toi ?"},
+ {t:"fig", title:"L'allitération", quote:"Pour qui sont ces serpents qui sifflent sur vos têtes ?", src:"Jean Racine, Andromaque (1667)", note:"L'allitération répète un son consonne : ici le [s] imite le sifflement des serpents. Si tu lis le vers à voix haute, tu l'entends !", ask:"Invente une phrase avec l'allitération en [f] pour évoquer le vent."},
+ {t:"aut", title:"Jean de La Fontaine (1621-1695)", quote:"« Je me sers d'animaux pour instruire les hommes. »", src:"Poète français, auteur des Fables", note:"Il s'est inspiré d'Ésope et de Phèdre pour écrire plus de 240 fables, en vers libres. Le Corbeau et le Renard, La Cigale et la Fourmi, Le Loup et l'Agneau sont encore connus de tous.", ask:"Quelle fable te reste en mémoire ?"},
+ {t:"cit", title:"Raison et cœur", quote:"Le cœur a ses raisons que la raison ne connaît point.", src:"Blaise Pascal, Pensées (1670)", note:"Pascal, à la fois mathématicien, physicien et philosophe, rappelle que nos sentiments échappent à la logique.", ask:"Es-tu plutôt « cœur » ou plutôt « raison » ?"},
+ {t:"fig", title:"L'apostrophe et la personnification", quote:"Ô temps, suspends ton vol !", src:"Alphonse de Lamartine, « Le Lac » (1820)", note:"Le poète s'adresse directement au temps (apostrophe) et le traite comme une personne capable d'obéir (personnification).", ask:"À quel moment de ta vie voudrais-tu dire « suspends ton vol » ?"},
+ {t:"aut", title:"Charles Perrault (1628-1703)", quote:"« Il était une fois… »", src:"Écrivain, auteur des Contes de ma mère l'Oye (1697)", note:"On lui doit La Belle au bois dormant, Cendrillon, Le Petit Chaperon rouge, Le Chat botté, Barbe bleue. Il a donné au conte merveilleux ses lettres de noblesse.", ask:"Quel conte de Perrault préfères-tu ?"},
+ {t:"cit", title:"Un livre, un miroir", quote:"Ainsi, lecteur, je suis moi-même la matière de mon livre.", src:"Michel de Montaigne, Essais, « Au lecteur » (1580)", note:"Montaigne invente un genre nouveau : l'essai. Il y parle de lui, mais aussi de l'humain en général. Il écrit au XVIe siècle, en moyen français.", ask:"De quoi parlerait un livre sur toi ?"},
+ {t:"fig", title:"L'antithèse", quote:"Je vis, je meurs ; je me brûle et me noie.", src:"Louise Labé, Sonnet VIII (1555)", note:"L'antithèse oppose deux idées contraires dans une même phrase : vivre/mourir, brûler/noyer. Elle traduit ici les contradictions de l'amour.", ask:"Écris une phrase avec deux contraires : chaud/froid, joie/peur…"},
+ {t:"aut", title:"Charles Baudelaire (1821-1867)", quote:"« Tu m'as donné ta boue et j'en ai fait de l'or. »", src:"Poète, auteur des Fleurs du mal (1857)", note:"Père de la poésie moderne, il est aussi critique d'art et traducteur d'Edgar Poe. Son recueil fut condamné pour « outrage à la morale publique » avant d'être réhabilité.", ask:"Qu'est-ce que la « poésie moderne » pour toi ?"},
+ {t:"cit", title:"Être de son temps", quote:"Il faut être absolument moderne.", src:"Arthur Rimbaud, Une saison en enfer (1873)", note:"Rimbaud a écrit presque toute son œuvre entre 15 et 20 ans, puis a cessé la poésie pour voyager.", ask:"Que veut dire « être moderne » aujourd'hui ?"},
+ {t:"fig", title:"La litote", quote:"Va, je ne te hais point.", src:"Pierre Corneille, Le Cid (1637)", note:"La litote dit moins pour faire entendre plus. Chimène ne dit pas « je t'aime », mais le sens est clair, et bien plus fort.", ask:"Trouve une litote : comment dire « c'est génial » sans le dire ?"},
+ {t:"aut", title:"Alexandre Dumas (1802-1870)", quote:"« Tous pour un, un pour tous ! »", src:"Romancier, auteur des Trois Mousquetaires", note:"Il a aussi écrit Le Comte de Monte-Cristo. Ses romans paraissaient d'abord en feuilletons dans les journaux : les lecteurs attendaient chaque épisode avec impatience !", ask:"Quel est ton héros d'aventure préféré ?"},
+ {t:"cit", title:"Les vrais paradis", quote:"Les vrais paradis sont les paradis qu'on a perdus.", src:"Marcel Proust, Le Temps retrouvé (1927)", note:"Pour Proust, le souvenir peut redonner vie au passé. Il est célèbre pour sa madeleine, qui fait ressurgir toute une enfance.", ask:"Quel est ton souvenir de Noël préféré ?"},
+ {t:"fig", title:"La métonymie", quote:"Boire un verre. · Lire du Molière. · Toute la salle applaudit.", src:"Exemples du quotidien", note:"La métonymie désigne une chose par un élément qui lui est lié : le contenant pour le contenu (le verre), l'auteur pour l'œuvre (Molière), le lieu pour les gens (la salle).", ask:"Peux-tu en trouver une autre dans ta journée ?"},
+ {t:"aut", title:"Émile Zola (1840-1902)", quote:"« J'accuse…! »", src:"Romancier et journaliste, chef de file du naturalisme", note:"Auteur de la grande fresque des Rougon-Macquart (Germinal, L'Assommoir, Nana). En 1898, sa lettre ouverte « J'accuse…! » défend le capitaine Dreyfus et marque l'histoire de la presse.", ask:"Les écrivains doivent-ils s'engager ?"},
+ {t:"cit", title:"Esprit de Noël", quote:"I will honour Christmas in my heart, and try to keep it all the year.", src:"Charles Dickens, A Christmas Carol (1843)", note:"« J'honorerai Noël dans mon cœur et j'essaierai de le garder toute l'année. » Dernier jour : Scrooge, d'abord avare et grincheux, devient généreux. Un conte de Noël devenu classique mondial.", ask:"Et toi, que gardes-tu de Noël tout au long de l'année ? Joyeux Noël ! 🎄"}
+];
+
+/* ========= LOGIQUE ========= */
+const KEY = "avent-litteraire-v1";
+const MODE_KEY = "avent-litteraire-mode";
+const grid = document.getElementById("grid");
+const dlg = document.getElementById("dlg");
+const card = document.getElementById("card");
+const progress = document.getElementById("progress");
+const modeBtn = document.getElementById("modeBtn");
+
+let opened, byDate;
+try{ opened = new Set(JSON.parse(localStorage.getItem(KEY)||"[]")); }catch(e){ opened = new Set(); }
+try{ byDate = localStorage.getItem(MODE_KEY)==="1"; }catch(e){ byDate = false; }
+
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify([...opened])); }catch(e){}
+  try{ localStorage.setItem(MODE_KEY, byDate?"1":"0"); }catch(e){}
+}
+
+function isLocked(n){
+  if(!byDate) return false;
+  const now = new Date(), m = now.getMonth(), d = now.getDate();
+  if(m===11) return n > d;      // décembre : ouvert jusqu'au jour J
+  if(m===0 || m>11) return false;
+  return m < 11;                // avant décembre : tout verrouillé
+}
+
+function build(){
+  grid.innerHTML = "";
+  DAYS.forEach((_,i)=>{
+    const n = i+1;
+    const b = document.createElement("button");
+    b.className = "door";
+    b.type = "button";
+    b.dataset.n = n;
+    b.setAttribute("aria-label", "Case " + n);
+    b.innerHTML =
+      '<span class="face front"><span class="num">'+n+'</span><span class="tiny">décembre</span></span>' +
+      '<span class="face back"><span aria-hidden="true">'+ icon(DAYS[i].t) +'</span><small>'+TYPES[DAYS[i].t].label+'</small></span>';
+    b.addEventListener("click", ()=>onDoor(n));
+    grid.appendChild(b);
+  });
+  refresh();
+}
+
+function icon(t){ return t==="cit"?"❝":t==="fig"?"✒︎":"📚"; }
+
+function refresh(){
+  document.querySelectorAll(".door").forEach(el=>{
+    const n = +el.dataset.n;
+    el.classList.toggle("open", opened.has(n));
+    const locked = isLocked(n);
+    el.classList.toggle("locked", locked && !opened.has(n));
+    el.setAttribute("aria-disabled", locked && !opened.has(n) ? "true":"false");
+  });
+  progress.textContent = opened.size + " / 24 cases ouvertes";
+  modeBtn.setAttribute("aria-pressed", byDate);
+}
+
+function onDoor(n){
+  const el = grid.querySelector('[data-n="'+n+'"]');
+  if(isLocked(n) && !opened.has(n)){
+    el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
+    return;
+  }
+  opened.add(n); save(); refresh();
+  setTimeout(()=>show(n), opened.size && el.classList.contains("open") ? 350 : 0);
+}
+
+function esc(s){ return s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function show(n){
+  const d = DAYS[n-1], ty = TYPES[d.t];
+  card.innerHTML =
+    '<button class="close" aria-label="Fermer" id="closeBtn">×</button>' +
+    '<div class="day" aria-hidden="true">'+n+'</div>' +
+    '<span class="badge '+ty.cls+'">'+ty.label+'</span>' +
+    '<h2 id="dlgTitle">'+esc(d.title)+'</h2>' +
+    '<p class="quote">'+(d.t==="cit"? '« '+esc(d.quote)+' »' : esc(d.quote))+'</p>' +
+    '<p class="src">'+esc(d.src)+'</p>' +
+    '<div class="note">'+esc(d.note)+'</div>' +
+    (d.ask? '<p class="ask">💬 '+esc(d.ask)+'</p>' : '');
+  dlg.showModal();
+  document.getElementById("closeBtn").addEventListener("click", ()=>dlg.close());
+  confetti();
+}
+dlg.addEventListener("click", e=>{ if(e.target===dlg) dlg.close(); });
+
+modeBtn.addEventListener("click", ()=>{ byDate=!byDate; save(); refresh(); });
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(confirm("Refermer toutes les cases ?")){ opened.clear(); save(); refresh(); }
+});
+document.getElementById("randBtn").addEventListener("click", ()=>{
+  const left = DAYS.map((_,i)=>i+1).filter(n=>!opened.has(n) && !isLocked(n));
+  const pool = left.length ? left : DAYS.map((_,i)=>i+1).filter(n=>!isLocked(n));
+  if(pool.length) onDoor(pool[Math.floor(Math.random()*pool.length)]);
+});
+
+/* ========= NEIGE ========= */
+const cv = document.getElementById("snow"), cx = cv.getContext("2d");
+let W,H,flakes=[];
+function size(){ W=cv.width=innerWidth; H=cv.height=innerHeight;
+  const count = Math.min(140, Math.floor(W/9));
+  flakes = Array.from({length:count},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2.6+.6,s:Math.random()*.8+.3,d:Math.random()*Math.PI*2}));
+}
+function snow(){
+  cx.clearRect(0,0,W,H); cx.fillStyle="rgba(255,255,255,.85)"; cx.beginPath();
+  for(const f of flakes){
+    f.y+=f.s; f.d+=.012; f.x+=Math.sin(f.d)*.4;
+    if(f.y>H+5){f.y=-5;f.x=Math.random()*W}
+    cx.moveTo(f.x,f.y); cx.arc(f.x,f.y,f.r,0,Math.PI*2);
+  }
+  cx.fill(); requestAnimationFrame(snow);
+}
+addEventListener("resize",size); size(); snow();
+
+/* ========= CONFETTIS DORÉS ========= */
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  const colors=["#f3c969","#b3202e","#1f5a45","#fdf6e3","#4a62c9"];
+  for(let i=0;i<36;i++){
+    const p=document.createElement("i");
+    Object.assign(p.style,{
+      position:"fixed",left:(30+Math.random()*40)+"vw",top:"40vh",width:"8px",height:"12px",
+      background:colors[i%colors.length],zIndex:9999,pointerEvents:"none",borderRadius:"2px",
+      transition:"transform 1.3s ease-out, opacity 1.3s ease-out"
+    });
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{
+      p.style.transform="translate("+((Math.random()-.5)*500)+"px,"+(Math.random()*-260-40)+"px) rotate("+(Math.random()*720)+"deg)";
+      p.style.opacity="0";
+    });
+    setTimeout(()=>p.remove(),1400);
+  }
+}
+
+build();
+</script>
+</body>
+</html>
